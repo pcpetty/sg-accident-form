@@ -1,0 +1,9 @@
+# MANIFEST.in
+
+# Exclude all Excel and PDF files
+exclude *.xlsx
+exclude *.pdf
+
+# Include specific directories/files if needed
+# include sg_accident_form/templates/*
+# include sg_accident_form/static/*

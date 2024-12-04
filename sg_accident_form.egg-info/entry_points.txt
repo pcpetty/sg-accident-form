@@ -1,0 +1,2 @@
+[console_scripts]
+sg-accident-form = sg_accident_form.main:main
