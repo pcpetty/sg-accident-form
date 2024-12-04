@@ -15,7 +15,3 @@ sg_accident_form.egg-info/dependency_links.txt
 sg_accident_form.egg-info/entry_points.txt
 sg_accident_form.egg-info/requires.txt
 sg_accident_form.egg-info/top_level.txt
-tests/__init__.py
-tests/test_data_collection.py
-tests/test_db_operations.py
-tests/test_report_generation.py
