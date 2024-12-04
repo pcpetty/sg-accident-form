@@ -1,0 +1,35 @@
+# Python-related
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Virtual environment
+sgvenv/
+*.egg-info/
+
+# Build and distribution directories
+build/
+dist/
+*.egg
+*.tar.gz
+*.whl
+
+# IDE files
+.vscode/
+*.code-workspace
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.temp
+*.swp
+
+# Accident reports and other generated files
+accident_reports/
+*.xlsx
+*.pdf
+accident_report.json

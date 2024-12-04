@@ -7,6 +7,8 @@ import json
 from openpyxl.chart import BarChart, Reference
 import datetime
 from .db_operations import fetch_driver_name, fetch_vehicle_plate
+import os
+from pathlib import Path
 from fpdf import FPDF
 
 def export_to_excel(data, filename="Accident_Report.xlsx"):
@@ -56,6 +58,16 @@ def export_to_pdf(data, filename="Accident_Report.pdf"):
     """
     Exports the accident report to a structured PDF format.
     """
+    # Determine the user's home directory dynamically
+    home_directory = Path.home()
+    save_directory = home_directory / "accident_reports"
+
+    # Create the directory if it doesn't exist
+    save_directory.mkdir(parents=True, exist_ok=True)
+
+    # Construct the full file path
+    pdf_filename = save_directory / filename
+
     pdf = FPDF()
     pdf.add_page()
     # Title
@@ -131,11 +143,8 @@ def export_to_pdf(data, filename="Accident_Report.pdf"):
     add_section("Additional Remarks", {"Remarks": additional_remarks})
 
     # Save the PDF
-    pdf.output(filename)
-    print(f"PDF report saved as {filename}.")
-    pdf_filename = f"/home/pcpetty/accident_reports/{data['reference_key']}.pdf"
-    export_to_pdf(data, filename=pdf_filename)
-
+    pdf.output(pdf_filename)
+    print(f"PDF report saved as {pdf_filename}")
 # ---- ---- # 
 
 def save_to_json(data, filename="accident_report.json"):

@@ -1,4 +1,0 @@
-fpdf2>=2.7.0
-psycopg2>=2.9.0
-questionary>=1.10.0
-openpyxl>=3.1.0
