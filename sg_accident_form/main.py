@@ -2,7 +2,8 @@ from .data_collection import collect_accident_data
 from .db_operations import connect_postgresql, insert_into_postgresql, get_next_flt_number, load_report, edit_report_field
 from .report_generation import export_to_excel, export_to_pdf, save_to_json
 from .utils import get_yes_no, input_with_default
-
+import pyfiglet
+from datetime import datetime
 
 def tutorial():
     """
@@ -27,6 +28,25 @@ def tutorial():
             break
     else:
         print("\nTutorial Complete. Proceeding to the form...")
+
+def display_logo(reference_id):
+    """
+    Displays the RiskRanger logo and submission confirmation.
+    """
+    logo = pyfiglet.figlet_format("RiskRanger")
+    print(logo)
+    print("A SAFETY & RISK MANAGEMENT SOLUTION\n")
+    print("████████████████████████████████████████████████████████████████████████████████")
+    print("█                                                                              █")
+    print(f"█       Your report has been submitted successfully to RiskRanger!             █")
+    print(f"█                                                                              █")
+    print(f"█       Reference ID: FLT{reference_id}                                        █")
+    print(f"█       Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}             █")
+    print(f"█                                                                              █")
+    print("█      Thank you for choosing RiskRanger for safety and risk reporting.        █")
+    print("█                                                                              █")
+    print("████████████████████████████████████████████████████████████████████████████████")
+    print("\n")
 
 def main():
     try:
@@ -57,12 +77,17 @@ def main():
                         # Save data
                         save_to_json(accident_data)
                         insert_into_postgresql(accident_data)
-                        export_to_excel(accident_data, filename=f"{reference_key}.xlsx")
-                        export_to_pdf(accident_data, filename=f"{reference_key}.pdf")
+                        try:
+                            export_to_excel(accident_data, filename=f"{reference_key}.xlsx")
+                        except Exception as e:
+                            print(f"Error exporting to Excel: {e}")
+                        try:
+                            export_to_pdf(accident_data, filename=f"{reference_key}.pdf")
+                        except Exception as e:
+                            print(f"Error exporting to PDF: {e}")
 
-                        print("\nForm Submitted Successfully!")
-                        print(f"Your reference number is: {reference_key}")
-                        print("Please save this number for future reference.")
+                        # Display the logo at the end
+                        display_logo(reference_key)
                         break  # Exit retry loop
                     else:
                         print("\nError: Unable to generate a reference number. Form not submitted.")

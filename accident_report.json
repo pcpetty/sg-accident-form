@@ -1,0 +1,56 @@
+{
+    "company_info": {
+        "is_faf": false,
+        "carrier": ""
+    },
+    "accident_date": null,
+    "accident_time": "",
+    "accident_location": "",
+    "hazmat": false,
+    "driver_id": 3,
+    "v1_driver": {
+        "driver_id": 3,
+        "driver_name": "Unknown",
+        "driver_phone": "N/A",
+        "license_number": null,
+        "license_expiry": null,
+        "driver_injury": false
+    },
+    "v1_codriver": {
+        "codriver_present": false
+    },
+    "v1_vehicle": null,
+    "v2_driver": {
+        "driver_id": 3,
+        "driver_name": "Unknown",
+        "driver_phone": "N/A",
+        "license_number": null,
+        "license_expiry": null,
+        "driver_injury": false
+    },
+    "v2_vehicle": null,
+    "trailer_info": {
+        "trailer_connected": false
+    },
+    "load_info": {
+        "manifest_number": false
+    },
+    "weather_info": "Clear",
+    "road_conditions": "Dry",
+    "police_info": {
+        "police_involvement": false,
+        "police_department": null,
+        "police_officer": null,
+        "police_badge": null,
+        "police_report": null
+    },
+    "tow_info": {
+        "tow_required": false,
+        "tow_disabling": null,
+        "tow_company_name": null,
+        "tow_company_phone": null,
+        "tow_company_address": null
+    },
+    "additional_remarks": "No additional remarks provided.",
+    "reference_key": "FLT0000016"
+}

@@ -133,6 +133,8 @@ def export_to_pdf(data, filename="Accident_Report.pdf"):
     # Save the PDF
     pdf.output(filename)
     print(f"PDF report saved as {filename}.")
+    pdf_filename = f"/home/pcpetty/accident_reports/{data['reference_key']}.pdf"
+    export_to_pdf(data, filename=pdf_filename)
 
 # ---- ---- # 
 
