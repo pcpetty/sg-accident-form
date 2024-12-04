@@ -74,12 +74,13 @@ def display_logo(reference_id):
     padding = (terminal_width - box_width) // 2
     padded_border = " " * padding + border_top_bottom
     padded_content = "\n".join(" " * padding + line for line in content_lines)
+    padded_legal_line = " " * padding + legal_line  # Fix the alignment of the legal notice
 
     # Display everything
     print(centered_logo)
     print(padded_border)
     print(padded_content)
-    print(legal_line.center(terminal_width))
+    print(padded_legal_line) 
     print(padded_border)
     print("\n")
 
