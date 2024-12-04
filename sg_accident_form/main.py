@@ -103,30 +103,39 @@ def main():
                 # Collect new accident data
                 accident_data = collect_accident_data()
 
-                # Retry mechanism for FLT number generation and submission
-                while True:
+                while True:  # Retry mechanism for FLT number generation and submission
                     reference_key = get_next_flt_number()
                     if reference_key:
                         accident_data["reference_key"] = reference_key
 
-                    # Save data
-                    save_to_json(accident_data)
-                    insert_into_postgresql(accident_data)
-                    try:
-                        export_to_excel(accident_data, filename=f"{reference_key}.xlsx")
-                    except Exception as e:
-                        print(f"Error exporting to Excel: {e}")
+                        # Save data
+                        save_to_json(accident_data)
+                        insert_into_postgresql(accident_data)
+                        try:
+                            export_to_excel(accident_data, filename=f"{reference_key}.xlsx")
+                        except Exception as e:
+                            print(f"Error exporting to Excel: {e}")
+                        try:
+                            export_to_pdf(accident_data, filename=f"{reference_key}.pdf")
+                        except Exception as e:
+                            print(f"Error while generating PDF: {e}")
+                        
+                        # Ensure the output directory exists
+                        output_dir = Path.home() / "accident_reports"
+                        output_dir.mkdir(exist_ok=True)
 
-                    try:
-                        # Generate the dynamic PDF file path
-                        pdf_filename = f"{Path.home()}/accident_reports/{accident_data['reference_key']}.pdf"
+                        # Update file paths for export
+                        excel_filename = output_dir / f"{reference_key}.xlsx"
+                        pdf_filename = output_dir / f"{reference_key}.pdf"
+                        export_to_excel(accident_data, filename=excel_filename)
                         export_to_pdf(accident_data, filename=pdf_filename)
-                    except Exception as e:
-                        print(f"Error while generating PDF: {e}")
 
                         # Display the logo at the end
                         display_logo(reference_key)
-                        break  # Exit retry loop
+
+                        # Exit the retry loop after successful save
+                        break  # <-- Exit retry loop here
+
                     else:
                         print("\nError: Unable to generate a reference number. Form not submitted.")
                         retry = get_yes_no("Would you like to retry submitting the form? (y/n)", "yes")
