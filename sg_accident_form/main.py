@@ -8,8 +8,10 @@ import shutil
 import os
 from pathlib import Path
 from fpdf import FPDF
+from colorama import init, Fore, Style
 
-
+# Initialize colorama for Windows compatibility (optional on Unix systems)
+init(autoreset=True)
 
 def tutorial():
     """
@@ -35,9 +37,13 @@ def tutorial():
     else:
         print("\nTutorial Complete. Proceeding to the form...")
 
-def display_logo(reference_id=None):
+def display_logo(context="startup", reference_id=None):
     """
-    Displays the RiskRanger logo and submission confirmation with proper alignment.
+    Displays the RiskRanger logo with different messages based on context.
+
+    Args:
+        context (str): Determines the message displayed. Options: 'startup', 'submission'.
+        reference_id (str): The reference ID for submission confirmation (optional).
     """
     # Generate the ASCII logo
     logo = pyfiglet.figlet_format("RiskRanger")
@@ -50,14 +56,14 @@ def display_logo(reference_id=None):
         line.center(terminal_width) for line in logo.split("\n")
     )
     
-    
     # Welcome message for startup
-    if reference_id is None:
+        # Define the content based on context
+    if context == "startup":
         lines = [
             "A SAFETY & RISK MANAGEMENT SOLUTION",
             "Welcome to the Safety Generalist Accident Report Form!",
         ]
-    else:
+    elif context == "submission" and reference_id:
         lines = [
             "A SAFETY & RISK MANAGEMENT SOLUTION",
             "Your report has been submitted successfully to RiskRanger!",
@@ -65,7 +71,9 @@ def display_logo(reference_id=None):
             f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             "Thank you for choosing RiskRanger for safety and risk reporting.",
         ]
-
+    else:
+        lines = ["A SAFETY & RISK MANAGEMENT SOLUTION"]
+        
     # Define the width of the box
     box_width = 80  # Fixed width for the box
 
@@ -104,20 +112,20 @@ def display_logo(reference_id=None):
 
 def main():
     try:
-        display_logo()
-        print("Safety Generalist Accident Report Form")
+        display_logo(context="startup")
+        print(Fore.CYAN + "Safety Generalist Accident Report Form")
 
         while True:  # Main menu loop
-            print("\nOptions:")
-            print("1. Create a new report")
-            print("2. Edit an existing report")
-            print("3. Exit")
+            print("\n" + Fore.GREEN + "Options:")
+            print(Fore.YELLOW + "1. Create a new report")
+            print(Fore.YELLOW + "2. Edit an existing report")
+            print(Fore.YELLOW + "3. Exit")
 
-            choice = input_with_default("Choose an option (1/2/3)", "3")
+            choice = input_with_default(Fore.MAGENTA + "Choose an option (1/2/3): ", "3")
 
             if choice == "1":
                 # Optional SOP Tutorial
-                if get_yes_no("Would you like an accident reporting SOP tutorial? (y/n)", "no"):
+                if get_yes_no(Fore.CYAN + "Would you like an accident reporting SOP tutorial? (y/n): ", "no"):
                     tutorial()
 
                 # Collect new accident data
@@ -151,8 +159,8 @@ def main():
                         export_to_excel(accident_data, filename=excel_filename)
                         export_to_pdf(accident_data, filename=pdf_filename)
 
-                        # Display the logo at the end
-                        display_logo(reference_key)
+                        # Display the submission confirmation
+                        display_logo(context="submission", reference_id=reference_key)
 
                         # Exit the retry loop after successful save
                         break  # <-- Exit retry loop here
@@ -165,7 +173,7 @@ def main():
                             break
 
             elif choice == "2":
-                # Edit existing report
+                print(Fore.CYAN + "\nEditing an existing report...")
                 flt_number = input("Enter the FLT number of the report to edit: ").strip()
                 report = load_report(flt_number)
                 if report:
@@ -177,14 +185,14 @@ def main():
                     print("\nReport not found. Returning to the main menu.")
 
             elif choice == "3":
-                print("\nThank you for using the Safety Generalist Accident Report Form. Goodbye!")
+                print(Fore.RED + "\nThank you for using the Safety Generalist Accident Report Form. Goodbye!")
                 break  # Exit the program
 
             else:
-                print("Invalid choice. Please try again.")
-    
+                print(Fore.RED + "Invalid choice. Please try again.")
+
     except KeyboardInterrupt:
-        print("\n\nProgram interrupted. Exiting gracefully. Goodbye!")
+        print(Fore.RED + "\n\nProgram interrupted. Exiting gracefully. Goodbye!")
 
 if __name__ == "__main__":
     main()
