@@ -14,5 +14,5 @@ __all__ = [
     "export_to_pdf",
 ]
 
-__version__ = "1.1.3"
+__version__ = "1.1.7"
 __author__ = "Cole Petty"

@@ -55,9 +55,8 @@ def display_logo(context="startup", reference_id=None):
     centered_logo = "\n".join(
         line.center(terminal_width) for line in logo.split("\n")
     )
-    
-    # Welcome message for startup
-        # Define the content based on context
+
+    # Define the content based on context
     if context == "startup":
         lines = [
             "A SAFETY & RISK MANAGEMENT SOLUTION",
@@ -73,18 +72,9 @@ def display_logo(context="startup", reference_id=None):
         ]
     else:
         lines = ["A SAFETY & RISK MANAGEMENT SOLUTION"]
-        
+
     # Define the width of the box
     box_width = 80  # Fixed width for the box
-
-    # Define the content
-    lines = [
-        "A SAFETY & RISK MANAGEMENT SOLUTION",
-        "Your report has been submitted successfully to RiskRanger!",
-        f"Reference ID: {reference_id}",
-        f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        "Thank you for choosing RiskRanger for safety and risk reporting.",
-    ]
 
     # Generate the border box
     border_top_bottom = "█" + " " * (box_width - 2) + "█"
@@ -100,13 +90,13 @@ def display_logo(context="startup", reference_id=None):
     padding = (terminal_width - box_width) // 2
     padded_border = " " * padding + border_top_bottom
     padded_content = "\n".join(" " * padding + line for line in content_lines)
-    padded_legal_line = " " * padding + legal_line  # Fix the alignment of the legal notice
+    padded_legal_line = " " * padding + legal_line
 
     # Display everything
     print(centered_logo)
     print(padded_border)
     print(padded_content)
-    print(padded_legal_line) 
+    print(padded_legal_line)
     print(padded_border)
     print("\n")
 

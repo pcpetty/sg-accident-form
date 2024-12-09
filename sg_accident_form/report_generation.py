@@ -156,8 +156,29 @@ def save_to_json(data, filename="accident_report.json"):
         raise TypeError(f"Type {type(obj)} not serializable")
 
     try:
+        # Load existing data if the file exists
+        try:
+            with open(filename, "r") as file:
+                existing_data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            existing_data = []
+
+        # Ensure existing_data is a list
+        if not isinstance(existing_data, list):
+            existing_data = []
+
+        # Append the new data
+        if isinstance(data, dict):
+            existing_data.append(data)
+        else:
+            print("Error: Data to save must be a dictionary.")
+            return
+
+        # Save the updated data back to the file
         with open(filename, "w") as file:
-            json.dump(data, file, indent=4, default=custom_serializer)
+            json.dump(existing_data, file, indent=4, default=custom_serializer)
+
         print(f"Data successfully saved to {filename}")
+
     except Exception as e:
         print(f"Error saving to JSON: {e}")

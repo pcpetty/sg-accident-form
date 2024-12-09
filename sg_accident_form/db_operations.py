@@ -161,14 +161,23 @@ def load_report(flt_number, filename="accident_report.json"):
     try:
         with open(filename, "r") as file:
             data = json.load(file)
-        # Find the report by FLT number
+            print("Loaded data:", data)  # Debugging output
+
         for report in data:
-            if report.get("reference_key") == flt_number:
+            print("Type of report:", type(report))  # Check the type of each report
+            print("Report:", report)  # Print the report to see its content
+
+            if isinstance(report, dict) and report.get("reference_key") == flt_number:
+                print("Report found!")  # Debugging output
                 return report
+
         print(f"No report found with reference number: {flt_number}")
         return None
     except FileNotFoundError:
         print("No existing reports found.")
+        return None
+    except json.JSONDecodeError:
+        print("Error reading the JSON file. The file might be corrupted.")
         return None
 
 # Edit a specific field in the report

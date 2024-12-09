@@ -90,12 +90,12 @@ def get_vehicle():
 
 # Determine Company Details
 def get_company_info():
-    is_faf = get_yes_no("Is this an FAF (Forward Air) accident? (y/n): ")
-    if is_faf:
-        faf_branch = get_condition("FAF Branch", ['FAF', 'TQL', 'PLC', 'OMNI'])
-        return {"is_faf": True, "faf_branch": faf_branch}
+    is_saf = get_yes_no("Is this an SAF (Somewhere Air) accident? (y/n): ")
+    if is_saf:
+        saf_branch = get_condition("SAF Branch", ['SAF', 'IQT', 'CLP', 'INMO'])
+        return {"is_saf": True, "saf_branch": saf_branch}
     else:
-        return {"is_faf": False, "carrier": input("Enter brokered third-party carrier name: ").strip()}
+        return {"is_saf": False, "carrier": input("Enter brokered third-party carrier name: ").strip()}
 
 def get_trailer():
     trailer_connected = get_yes_no("Is a trailer connected? (y/n): ")
