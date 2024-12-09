@@ -1,8 +1,29 @@
 # SG Accident Report Data Collection Functions
 
 # Import Libraries and Modules
-from .utils import get_yes_no, validate_date, get_condition, input_with_default
+from .utils import get_yes_no, get_condition, input_with_default, get_date, get_time
 from .db_operations import get_or_create_driver, get_or_create_vehicle
+from .dot_accident_data import post_accident_testing, post_accident_testing_timeline, dot_recordable, followup_needed, accident_or_incident, citation_info
+
+def person_reporting():
+    person_reporting_name = input_with_default("Enter the name of the person or service reporting: ")
+    person_reporting_contact = input_with_default("Enter the phone number, email, or source of initial report: ")
+    date_reported = get_date("Enter date reported (MM/DD/YYYY): ")
+    time_reported = get_time("Enter the time of initial report (HH:MM): ")
+    report_completed_by = input_with_default("Enter name of person completing the report: ")
+    return {
+        "person_reporting_name": person_reporting_name,
+        "person_reporting_contact": person_reporting_contact,
+        "date_reported": date_reported,
+        "time_reported": time_reported,
+        "report_completed_by": report_completed_by,
+    }
+    
+def accident_description():
+    describe_accident = input_with_default("Briefly describe accident: ")
+    return {
+        "describe_accident": describe_accident,
+    }
 
 def get_driver():
     """
@@ -17,7 +38,7 @@ def get_driver():
     driver_phone = driver_phone if driver_phone else "N/A"  # Default value if skipped
     license_number = input("Driver license number (Press Enter to skip): ").strip()
     license_number = license_number if license_number else None  # Optional field
-    license_expiry = validate_date("License expiry date (MM/DD/YYYY) (Press Enter to skip): ")
+    license_expiry = get_date("License expiry date (MM/DD/YYYY) (Press Enter to skip): ")
     license_expiry = license_expiry if license_expiry else None  # Optional field
     driver_injury = get_yes_no(f"Is {driver_name} injured? (y/n)") if driver_name != "Unknown" else False
 
@@ -82,7 +103,7 @@ def get_trailer():
     trailer_connected = get_yes_no("Is a trailer connected? (y/n): ")
     if trailer_connected:
         trailer_type = get_condition("trailer_type", ['Dry Van', 'Refrigerated', 'Bobtail/None'])
-        trailer_number = input("Enter trailer number: ").strip()
+        trailer_number = input_with_default("Enter trailer number: ").strip()
         return {
             "trailer_connected": trailer_connected,
             "trailer_type": trailer_type,
@@ -90,17 +111,44 @@ def get_trailer():
         }
     return {"trailer_connected": False}
 
+# --- LOAD INFO --- # 
+
 def load_information():
-    manifest_number = input("Enter manifest number: ").strip()
-    if manifest_number:
-        origin = input("Enter load origin: ").strip()
-        destination = input("Enter load destination: ").strip()
-        return {
-            "manifest_number": manifest_number,
-            "origin": origin,
-            "destination": destination,
-        }
-    return {"manifest_number": False}
+    manifest_number = input_with_default("Enter manifest number: ", default="Unknown").strip()
+    if not manifest_number:
+        return {"manifest_number": False}
+    
+    origin = input_with_default("Enter load origin: ", default="Unknown").strip()
+    destination = input_with_default("Enter load destination: ", default="Unknown").strip()
+
+    # Hazmat information
+    hazmat = get_yes_no("Hazmat involved? (y/n): ")
+    hazmat_description = None
+    if hazmat:
+        hazmat_description = input_with_default("Describe the hazmat involvement: ", default="Not specified")
+
+    # Service failure information
+    service_failure = get_yes_no("Was there a service failure as a result of the accident? (y/n): ")
+    extent_of_failure = None
+    if service_failure:
+        extent_of_failure = input_with_default("If service failure, describe: ", default="Not specified")
+
+    # Freight spillage or damage
+    freight_spill_or_damage = get_yes_no("Was there freight spillage or damage as a result of the accident? (y/n): ")
+
+    # Compile and return the collected information
+    return {
+        "manifest_number": manifest_number,
+        "origin": origin,
+        "destination": destination,
+        "hazmat": hazmat,
+        "hazmat_description": hazmat_description if hazmat else None,
+        "service_failure": service_failure,
+        "extent_of_failure": extent_of_failure if service_failure else None,
+        "freight_spill_or_damage": freight_spill_or_damage
+    }
+    
+# ---- 
 
 # # Co-Driver Information
 def v1_codriver():
@@ -191,40 +239,52 @@ def collect_accident_data():
     Returns a dictionary containing the collected information.
     """
     accident_data = {}
+    print("\n--- Incident Information ---")
     # Collect company information
     accident_data["company_info"] = get_company_info()
+    # Person / Service Reporting Information
+    accident_data["person_reporting"] = person_reporting()
     # Collect accident basics
-    accident_data["accident_date"] = validate_date("Enter accident date (MM/DD/YYYY)")
-    accident_data["accident_time"] = input("Enter accident time (HH:MM): ").strip()
-    accident_data["accident_location"] = input("Enter accident location or address: ").strip()
-    accident_data["hazmat"] = get_yes_no("Hazmat involved? (y/n): ")
+    accident_data["accident_date"] = get_date("Enter accident date (MM/DD/YYYY): ")
+    accident_data["accident_time"] = input_with_default("Enter accident time (HH:MM): ", default="Not specified")
+    # Location and Description Info 
+    print("\n--- Accident Location and Description Info ---")
+    accident_data["accident_location"] = input_with_default("Enter accident location or address: ", default="Not specified")
+    accident_data["accident_description"] = accident_description()
+    # Load Information
+    print("\n--- Load Information ---")
+    accident_data["load_info"] = load_information()
+    # Police Information
+    print("\n--- Law Enforcement Information ---")
+    accident_data["police_info"] = get_police_information()   
+    # Collect weather and road conditions
+    accident_data["weather_info"] = get_condition("weather_conditions", ['Clear', 'Overcast', 'Rainy', 'Windy', 'Snowy'])
+    accident_data["road_conditions"] = get_condition("road_conditions", ['Dry', 'Wet', 'Icy', 'Snowy'])
+    # DOT Testing
+    print("\n DOT Testing")
+    accident_data["post_accident_testing"] = post_accident_testing()
+    accident_data["post_accident_timeline"] = post_accident_testing_timeline()
+    accident_data["dot_recordable"] = dot_recordable()
+    accident_data["follow_up"] = followup_needed() or {"followup_needed": False}
     # Collect V1 driver and vehicle information
     print("\n--- V1 Driver Details ---")
-    driver_info = get_driver()
-    if driver_info:
-        accident_data["driver_id"] = driver_info["driver_id"]
-    accident_data["v1_driver"] = get_driver()
+    v1_driver = get_driver()
+    accident_data["v1_driver"] = v1_driver
+    accident_data["driver_id"] = v1_driver.get("driver_id", "Unknown")
+    accident_data["v1_citation"] = citation_info()
     accident_data["v1_codriver"] = v1_codriver()
     print("\n--- V1 Vehicle Details ---")
     accident_data["v1_vehicle"] = get_vehicle()
+    # Collect Trailer Information
+    print("\n--- Trailer Information ---")
+    accident_data["trailer_info"] = get_trailer()
+    print("\n--- Tow Information ---")
+    accident_data["tow_info"] = get_tow_information()
     # Collect V2 driver and vehicle information
     print("\n--- V2 Driver Details ---")
     accident_data["v2_driver"] = get_driver()
     print("\n--- V2 Vehicle Details ---")
     accident_data["v2_vehicle"] = get_vehicle()
-    # Collect trailer and load information
-    print("\n--- Trailer Information ---")
-    accident_data["trailer_info"] = get_trailer()
-    print("\n--- Load Information ---")
-    accident_data["load_info"] = load_information()
-    # Collect weather and road conditions
-    accident_data["weather_info"] = get_condition("weather_conditions", ['Clear', 'Overcast', 'Rainy', 'Windy', 'Snowy'])
-    accident_data["road_conditions"] = get_condition("road_conditions", ['Dry', 'Wet', 'Icy', 'Snowy'])
-    # Collect police and tow information
-    print("\n--- Police Information ---")
-    accident_data["police_info"] = get_police_information()
-    print("\n--- Tow Information ---")
-    accident_data["tow_info"] = get_tow_information()
     # Additional remarks
     accident_data["additional_remarks"] = get_additional_remarks()
     return accident_data
