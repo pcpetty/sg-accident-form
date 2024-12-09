@@ -1,13 +1,14 @@
-from .data_collection import collect_accident_data
 from .db_operations import connect_postgresql, insert_into_postgresql, get_next_flt_number, load_report, edit_report_field
 from .report_generation import export_to_excel, export_to_pdf, save_to_json
 from .utils import get_yes_no, input_with_default
+from .data_collection import collect_accident_data, dot_recordable, post_accident_testing, post_accident_testing_timeline, followup_needed, citation_info
 import pyfiglet
 from datetime import datetime
 import shutil
 import os
 from pathlib import Path
 from fpdf import FPDF
+
 
 def tutorial():
     """
@@ -106,6 +107,7 @@ def main():
 
                 while True:  # Retry mechanism for FLT number generation and submission
                     reference_key = get_next_flt_number()
+                    print(f"Generated reference key: {reference_key}")
                     if reference_key:
                         accident_data["reference_key"] = reference_key
 
