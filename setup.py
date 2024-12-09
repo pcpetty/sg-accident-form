@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sg_accident_form",               # Name of the package
-    version="1.1.3",                       # Package version
+    version="1.1.4",                       # Package version
     description="Safety Generalist Accident Reporting System",  # Short description
     long_description=open("README.md").read(),  # Use README for a detailed description
     long_description_content_type="text/markdown",  # Specify Markdown content

@@ -6,11 +6,11 @@ import questionary
 
 
 def person_reporting():
-    person_reporting_name = input_with_default("Enter the name of the person or service reporting: ")
-    person_reporting_contact = input_with_default("Enter the phone number, email, or source of initial report: ")
+    person_reporting_name = input_with_default("Enter the name of the person or service reporting: ", "Unknown")
+    person_reporting_contact = input_with_default("Enter the phone number, email, or source of initial report: ", "Unknown")
     date_reported = get_date("Enter date reported (MM/DD/YYYY): ")
     time_reported = get_time("Enter the time of initial report (HH:MM): ")
-    report_completed_by = input_with_default("Enter name of person completing the report: ")
+    report_completed_by = input_with_default("Enter name of person completing the report: ", "Unknown")
     return {
         "person_reporting_name": person_reporting_name,
         "person_reporting_contact": person_reporting_contact,
@@ -20,7 +20,7 @@ def person_reporting():
     }
     
 def accident_description():
-    describe_accident = input_with_default("Briefly describe accident: ")
+    describe_accident = input_with_default("Briefly describe accident: ", "None")
     return {
         "describe_accident": describe_accident,
     }
@@ -32,15 +32,13 @@ def get_driver():
     """
     print("\n--- Enter Driver Details ---")
     # Collect driver details with optional skipping
-    driver_name = input("Driver name (Press Enter to skip): ").strip()
-    driver_name = driver_name if driver_name else "Unknown"  # Default value if skipped
-    driver_phone = input("Driver phone number (Press Enter to skip): ").strip()
-    driver_phone = driver_phone if driver_phone else "N/A"  # Default value if skipped
-    license_number = input("Driver license number (Press Enter to skip): ").strip()
-    license_number = license_number if license_number else None  # Optional field
+    driver_name = input_with_default("Driver name (Press Enter to skip): ", "Unknown")
+    driver_phone = input_with_default("Driver phone number (Press Enter to skip): ", "N/A")
+    license_number = input_with_default("Driver license number (Press Enter to skip): ", None)
     license_expiry = get_date("License expiry date (MM/DD/YYYY) (Press Enter to skip): ")
-    license_expiry = license_expiry if license_expiry else None  # Optional field
-    driver_injury = get_yes_no(f"Is {driver_name} injured? (y/n)") if driver_name != "Unknown" else False
+
+    # Handle driver injury only if driver_name is known
+    driver_injury = get_yes_no(f"Is {driver_name} injured? (y/n)", "no") if driver_name != "Unknown" else False
 
     # Attempt to retrieve or create driver in the database
     driver_id = get_or_create_driver(driver_name, driver_phone, license_number, license_expiry)
@@ -103,7 +101,7 @@ def get_trailer():
     trailer_connected = get_yes_no("Is a trailer connected? (y/n): ")
     if trailer_connected:
         trailer_type = get_condition("trailer_type", ['Dry Van', 'Refrigerated', 'Bobtail/None'])
-        trailer_number = input_with_default("Enter trailer number: ").strip()
+        trailer_number = input_with_default("Enter trailer number: ", "N/A").strip()
         return {
             "trailer_connected": trailer_connected,
             "trailer_type": trailer_type,
@@ -257,7 +255,6 @@ def dot_recordable():
         "dot_recordable": False,
     }
     
-dot_recordable_result = dot_recordable()
 
 def followup_needed():
     preventable_accident = get_yes_no("Was the accident preventable? (y/n): ")

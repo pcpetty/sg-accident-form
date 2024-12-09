@@ -10,6 +10,7 @@ from pathlib import Path
 from fpdf import FPDF
 
 
+
 def tutorial():
     """
     Provides a step-by-step tutorial on accident reporting.
@@ -34,7 +35,7 @@ def tutorial():
     else:
         print("\nTutorial Complete. Proceeding to the form...")
 
-def display_logo(reference_id):
+def display_logo(reference_id=None):
     """
     Displays the RiskRanger logo and submission confirmation with proper alignment.
     """
@@ -48,6 +49,22 @@ def display_logo(reference_id):
     centered_logo = "\n".join(
         line.center(terminal_width) for line in logo.split("\n")
     )
+    
+    
+    # Welcome message for startup
+    if reference_id is None:
+        lines = [
+            "A SAFETY & RISK MANAGEMENT SOLUTION",
+            "Welcome to the Safety Generalist Accident Report Form!",
+        ]
+    else:
+        lines = [
+            "A SAFETY & RISK MANAGEMENT SOLUTION",
+            "Your report has been submitted successfully to RiskRanger!",
+            f"Reference ID: {reference_id}",
+            f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "Thank you for choosing RiskRanger for safety and risk reporting.",
+        ]
 
     # Define the width of the box
     box_width = 80  # Fixed width for the box
@@ -87,6 +104,7 @@ def display_logo(reference_id):
 
 def main():
     try:
+        display_logo()
         print("Safety Generalist Accident Report Form")
 
         while True:  # Main menu loop
