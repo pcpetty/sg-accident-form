@@ -155,3 +155,47 @@ def validate_email(prompt):
 def clean_field(field):
     return field.strip() if field else None
 
+
+# --- GUI --- # 
+
+import datetime
+import re
+from tkinter import messagebox
+
+def input_with_default(prompt, default):
+    response = input(f"{prompt} (Press Enter to default to '{default}'): ").strip()
+    return response if response else default
+
+def get_yes_no(prompt, default="no"):
+    while True:
+        response = input_with_default(prompt, default).lower()
+        if response in ['y', 'yes']:
+            return True
+        elif response in ['n', 'no']:
+            return False
+        else:
+            print("Invalid input. Please enter 'y' or 'n'.")
+
+def get_date(prompt):
+    while True:
+        date_str = input_with_default(prompt, "").strip()
+        if not date_str:
+            return None
+        try:
+            return datetime.datetime.strptime(date_str, "%m/%d/%Y").date()
+        except ValueError:
+            print("Invalid date format. Please use MM/DD/YYYY.")
+
+def validate_input(field_value, field_name):
+    if not field_value.strip():
+        messagebox.showwarning("Input Error", f"{field_name} cannot be empty.")
+        return False
+    return True
+
+def validate_date(date_str):
+    try:
+        datetime.datetime.strptime(date_str, "%m/%d/%Y")
+        return True
+    except ValueError:
+        messagebox.showwarning("Input Error", "Invalid date format. Use MM/DD/YYYY.")
+        return False
