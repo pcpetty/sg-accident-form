@@ -9,6 +9,13 @@ import os
 from pathlib import Path
 from fpdf import FPDF
 from colorama import init, Fore, Style
+from sg_accident_form.db_operations import (
+    connect_postgresql,
+    insert_into_postgresql,
+    get_next_flt_number,
+    load_report,
+    edit_report_field,
+)
 
 
 # Initialize colorama for Windows compatibility (optional on Unix systems)
