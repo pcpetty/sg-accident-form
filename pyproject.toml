@@ -1,3 +1,15 @@
-[build-system] 
-requires = ["setuptools>=42", "wheel"] 
+[build-system]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "risk_ranger"
+version = "1.0.0"
+description = "Risk Ranger Accident Reporting and Analysis Tool"
+authors = [{name = "Cole Petty"}]
+
+[tool.setuptools]
+packages = ["risk_ranger"]
+
+[tool.entry-points.console_scripts]
+risk_ranger_dashboard = "risk_ranger.streamlit_dashboard:main"

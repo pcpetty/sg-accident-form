@@ -18,6 +18,8 @@ from sg_accident_form.db_operations import (
 )
 
 
+
+
 # Initialize colorama for Windows compatibility (optional on Unix systems)
 init(autoreset=True)
 
@@ -108,26 +110,26 @@ def display_logo(context="startup", reference_id=None):
     print(padded_border)
     print("\n")
 
-from sg_accident_form.gui_main import root
-from sg_accident_form.data_collection import collect_accident_data
+# from sg_accident_form.gui_main import root
+# from sg_accident_form.data_collection import collect_accident_data
 
-def main():
-    print("Choose an option:")
-    print("1. Run CLI")
-    print("2. Run GUI")
+# def main():
+#     print("Choose an option:")
+#     print("1. Run CLI")
+#     print("2. Run GUI")
 
-    choice = input("Enter 1 or 2: ").strip()
+#     choice = input("Enter 1 or 2: ").strip()
 
-    if choice == "1":
-        accident_data = collect_accident_data()
-        print("Collected Data:", accident_data)
-    elif choice == "2":
-        root.mainloop()
-    else:
-        print("Invalid option. Exiting.")
+#     if choice == "1":
+#         accident_data = collect_accident_data()
+#         print("Collected Data:", accident_data)
+#     elif choice == "2":
+#         root.mainloop()
+#     else:
+#         print("Invalid option. Exiting.")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 def main():
     try:

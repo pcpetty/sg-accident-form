@@ -4,3 +4,7 @@ questionary==1.10.0
 openpyxl==3.1.0
 PyQt6
 pyfiglet==0.8.post1
+streamlit
+pandas
+sqlalchemy
+numpy

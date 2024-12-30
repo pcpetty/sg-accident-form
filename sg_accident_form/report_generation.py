@@ -1,5 +1,4 @@
 # SG Accident Report Generation
-
 # Import Libraries and Modules
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment

@@ -3,7 +3,7 @@
 from .utils import get_yes_no, get_condition, input_with_default, get_date, get_time
 from .db_operations import get_or_create_driver, get_or_create_vehicle
 import questionary
-
+import os
 
 def person_reporting():
     person_reporting_name = input_with_default("Enter the name of the person or service reporting: ", "Unknown")
@@ -287,7 +287,6 @@ def accident_or_incident():
 
     claims_only = get_yes_no("Is this a claims-only case (e.g., minor damage with no vehicle involvement)? (y/n): ")
     return {"accident": False, "incident": False, "claims_only": claims_only}
-
 
 # ---- 
 

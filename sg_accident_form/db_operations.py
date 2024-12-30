@@ -4,8 +4,9 @@ import psycopg2
 from psycopg2.extras import Json
 import json
 import datetime
-from .utils import input_with_default
-
+import pandas as pd
+from sg_accident_form.utils import input_with_default
+import os
 # Connect to PostgreSQL
 def connect_postgresql():
     try:
@@ -230,3 +231,32 @@ def fetch_vehicle_plate(vehicle_id):
         return "Unknown"
     finally:
         conn.close()
+        
+        
+# Queries 
+
+# Connect to PostgreSQL
+conn = connect_postgresql()
+
+# Query the data
+query = """
+SELECT id, 
+    reference_key, 
+    report_data->>'hazmat' AS hazmat, 
+    report_data->'v1_driver'->>'driver_name' AS v1_driver_name, 
+    report_data->'truck_info'->>'truck_type' AS truck_type, 
+    report_data->>'weather_info' AS weather_info, 
+    report_data->>'road_conditions' AS road_conditions, 
+    created_at
+FROM accident_reports
+WHERE id = 2;
+"""
+df = pd.read_sql_query(query, conn)
+
+# Pretty print JSON if necessary
+df['weather_info_pretty'] = df['weather_info'].apply(lambda x: json.dumps(x, indent=4))
+
+# Display
+print(df)
+
+# Driver Lookup

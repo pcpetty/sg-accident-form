@@ -34,3 +34,8 @@ accident_reports/
 *.xlsx
 *.pdf
 accident_report.json
+
+sg_accident_form/gui_main.py
+/gui_main.py
+/gui_main
+gui_main
