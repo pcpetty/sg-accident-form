@@ -13,37 +13,45 @@ from openpyxl.styles import Font, Alignment
 import json
 from openpyxl.chart import BarChart, Reference
 from pathlib import Path
+import logging
+
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 # ------------------------------------------------------------------------------------------------
 # LOAD ENVIRONMENT VARIABLES # ------------------------------------------------------------------------------------------------
-load_dotenv()
+load_dotenv()  # Load environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("Database URL is not set or loaded correctly.")
+else:
+    print(f"Database URL loaded: {DATABASE_URL}")
+
 # ------------------------------------------------------------------------------------------------
 # CONNECT TO PSQL DB # ------------------------------------------------------------------------------------------------
-def connect_db():
-    """
-    Establishes a connection to the PostgreSQL database.
-    """
-    try:
-        engine = create_engine(DATABASE_URL)
-        return engine
-    except Exception as e:
-        st.error(f"Database connection failed: {e}")
-        return None
+from sqlalchemy import create_engine
+
+engine = create_engine(DATABASE_URL)
+
+# Check the connection
+try:
+    with engine.connect() as conn:
+        print("Database connection successful.")
+except Exception as e:
+    print(f"Database connection failed: {e}")
+
 # ------------------------------------------------------------------------------------------------
 # GET DATA FROM PSQL # ------------------------------------------------------------------------------------------------
 def fetch_data(query, params=None):
     """
     Executes a query and fetches data from the database.
+    Returns a DataFrame.
     """
-    engine = connect_db()
-    if engine:
-        try:
-            with engine.connect() as conn:
-                return pd.read_sql_query(query, conn, params=params)
-        except Exception as e:
-            st.error(f"Error fetching data: {e}")
-            return pd.DataFrame()
-    else:
+    try:
+        with engine.connect() as conn:
+            return pd.read_sql_query(query, conn, params=params)
+    except Exception as e:
+        st.error(f"Error fetching data: {e}")
         return pd.DataFrame()
 # ------------------------------------------------------------------------------------------------
 # SAVE DATA FUNCTION # ------------------------------------------------------------------------------------------------
@@ -51,14 +59,12 @@ def save_data(query, params):
     """
     Saves data to the database.
     """
-    engine = connect_db()
-    if engine:
-        try:
-            with engine.connect() as conn:
-                conn.execute(query, params)
-                st.success("Data saved successfully!")
-        except Exception as e:
-            st.error(f"Failed to save data: {e}")
+    try:
+        with engine.connect() as conn:
+            conn.execute(query, params)
+            st.success("Data saved successfully!")
+    except Exception as e:
+        st.error(f"Failed to save data: {e}")
 # ------------------------------------------------------------------------------------------------
 # LOGO FUNCTION # -------------------------------------------------------------------------------------
 def display_logo():
@@ -95,12 +101,12 @@ def tutorial():
         "If a tow is required, determine if the vehicle is disabled. If it is being towed, obtain the tow company information.",
     ]
     st.header("Accident Reporting SOP Tutorial")
-    # for i, step in enumerate(steps, start=1):
-    #     st.markdown(f"**{i}. {step}**")
-    #     if i < len(steps) and not st.button(f"Next Step {i+1}", key=f"step_{i}"):
-    #         break
-    # else:
-    #     st.success("Tutorial Complete!")
+    for i, step in enumerate(steps, start=1):
+        st.markdown(f"**{i}. {step}**")
+        if i < len(steps) and not st.button(f"Next Step {i+1}", key=f"step_{i}"):
+            break
+    else:
+        st.success("Tutorial Complete!")
 # ------------------------------------------------------------------------------------------------
 # PROGRAM LOGIC FUNCTIONS AND UTILITY #-------------------------------------------------------------------------------------------------------
 def get_yes_no(prompt):
@@ -113,7 +119,6 @@ def get_yes_no(prompt):
     """
     response = st.radio(prompt, options=["Yes", "No"], index=1)  # Default to "No"
     return response == "Yes"
-
 # ------------------------------------------------------------------------------------------------
 # INPUT WITH DEFAULT FUNCTION # ------------------------------------------------------------------------------------------------
 def text_input_with_default(label, default_value=""):
@@ -126,8 +131,8 @@ def text_input_with_default(label, default_value=""):
     return input_value.strip()
 # ------------------------------------------------------------------------------------------------
 # NUMERIC INPUT WITH DEFAULT FUNCTION ------------------------------------------------------------------------------------------------
-def numeric_input_with_default(label, default_value=0):
-    return numeric_input_with_default(label, value=default_value)
+# def numeric_input_with_default(label):
+#     return numeric_input_with_default(label)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ACCIDENT REPORT DATA COLLECTION FUNCTIONS # ------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------
@@ -147,7 +152,6 @@ def person_reporting():
         "report_completed_by": report_completed_by,
     }
 # ------------------------------------------------------------------------------------------------
-# LOAD INFO FUNCTION # ------------------------------------------------------------------------------------------------
 # LOAD INFO FUNCTION # ------------------------------------------------------------------------------------------------
 def load_information():
     """
@@ -245,42 +249,39 @@ def get_police_information():
 # ------------------------------------------------------------------------------------------------
 # GET OR CREATE DRIVER FUNCTION - DB OPERATIONS # ----------------------------------------------------------------------------
 def get_or_create_driver(name, phone, license_number, license_expiry):
-    """
-    Retrieves a driver from the database if they exist, or creates a new one.
-    Returns the driver's database ID.
-    """
-    engine = connect_db()
-    if not engine:
+    conn = engine.connect()
+    if not conn:
         st.error("Database connection failed.")
         return None
     try:
-        with engine.connect() as conn:
+        with conn.begin() as transaction:
             # Check if the driver already exists
-            query_check = """
-            SELECT driver_id FROM drivers
-            WHERE name = :name AND (phone_number = :phone OR phone_number IS NULL)
-            """
-            result = conn.execute(query_check, {"name": name, "phone": phone}).fetchone()
+            result = conn.execute(
+                """
+                SELECT driver_id FROM drivers
+                WHERE name = %s AND (phone_number = %s OR phone_number IS NULL)
+                """,
+                (name, phone)
+            ).fetchone()
             if result:
                 st.info("Driver found in database.")
-                return result[0]  # Return existing driver ID
+                return result[0]
             # Insert a new driver if not found
-            query_insert = """
-            INSERT INTO drivers (name, phone_number, license_number, license_expiry)
-            VALUES (:name, :phone, :license_number, :license_expiry)
-            RETURNING driver_id
-            """
-            result = conn.execute(query_insert, {
-                "name": name,
-                "phone": phone,
-                "license_number": license_number,
-                "license_expiry": license_expiry,
-            }).fetchone()
+            new_driver = conn.execute(
+                """
+                INSERT INTO drivers (name, phone_number, license_number, license_expiry)
+                VALUES (%s, %s, %s, %s)
+                RETURNING driver_id
+                """,
+                (name, phone, license_number, license_expiry)
+            ).fetchone()
             st.success("New driver created successfully.")
-            return result[0]  # Return new driver ID
+            return new_driver[0]
     except Exception as e:
         st.error(f"Error in get_or_create_driver: {e}")
         return None
+    finally:
+        conn.close()
 # ------------------------------------------------------------------------------------------------        
 # V1 DRIVER INFO FUNCTION # ------------------------------------------------------------------------------------------------
 def get_driver():
@@ -291,10 +292,10 @@ def get_driver():
     st.subheader("Enter Driver Details")
     
     # Collect driver details
-    driver_name = text_input_with_default("Driver name:", value="Unknown")
-    driver_phone = text_input_with_default("Driver phone number (Optional):", value="N/A")
-    license_number = numeric_input_with_default("Driver license number (Optional):", value="")
-    license_expiry = st.date_input("License expiry date (Optional):", value=None)
+    driver_name = text_input_with_default("Driver name:")
+    driver_phone = text_input_with_default("Driver phone number (Optional):")
+    license_number = text_input_with_default("Driver license number (Optional):")
+    license_expiry = st.date_input("License expiry date (Optional):")
     
     # Handle driver injury only if driver_name is known
     if driver_name != "Unknown":
@@ -326,11 +327,8 @@ def get_or_create_vehicle(plate_number, make, model, year, color):
     Retrieves a vehicle from the database if it exists or creates a new one.
     Returns the vehicle's database ID.
     """
-    engine = connect_db()
-    if not engine:
-        st.error("Database connection failed.")
-        return None
     try:
+        # Use the engine to connect to the database
         with engine.connect() as conn:
             # Check if the vehicle already exists
             query_check = """
@@ -339,6 +337,7 @@ def get_or_create_vehicle(plate_number, make, model, year, color):
             """
             result = conn.execute(query_check, {"plate_number": plate_number}).fetchone()
             if result:
+                st.info("Vehicle found in database.")
                 return result[0]  # Return existing vehicle ID
             # Insert a new vehicle if not found
             query_insert = """
@@ -353,6 +352,7 @@ def get_or_create_vehicle(plate_number, make, model, year, color):
                 "year": year,
                 "color": color
             }).fetchone()
+            st.success("New vehicle created successfully.")
             return result[0]  # Return new vehicle ID
     except Exception as e:
         st.error(f"Error in get_or_create_vehicle: {e}")
@@ -391,7 +391,7 @@ def get_vehicle():
 # COMPANY DETAILS FUNCTION # ------------------------------------------------------------------------------------------------
 def get_company_info():
     st.subheader("Company or Division")
-    is_saf = get_yes_no("Is this an SAF (Somewhere Air) accident? (y/n): ")
+    is_saf = get_yes_no("Is this an SAF (Somewhere Air) accident?: ")
     if is_saf:
         saf_branch = st.selectbox("Company Division:", ["SAF", "IQT", "CLP", "INMO"])
         return {"is_saf": True, "saf_branch": saf_branch}
@@ -409,7 +409,7 @@ def get_trailer() -> dict:
     trailer_connected = get_yes_no("Is a trailer connected? (y/n): ")
     if trailer_connected:
         trailer_type = st.selectbox("Trailer Type", ['Dry Van', 'Refrigerated', 'Bobtail/None'])
-        trailer_number = text_input_with_default("Enter the trailer number: ", value="N/A").upper().strip()
+        trailer_number = text_input_with_default("Enter the trailer number: ").upper().strip()
         
         # Validation
         if not trailer_number:
@@ -468,13 +468,11 @@ def post_accident_testing_timeline():
     st.subheader("Post-Accident Testing Timeline")
     # Steps to initiate the test
     steps_to_initiate_test = text_input_with_default(
-        "Describe steps taken to initiate post-accident testing:", 
-        default_value="Not specified"
+        "Describe steps taken to initiate post-accident testing:"
     )
     # Reason if no test can be done
     test_cannot_be_done = text_input_with_default(
-        "If no test can be done, document the reason here:", 
-        default_value="N/A"
+        "If no test can be done, document the reason here:"
     )
     # Drug test completion status
     drug_test_completed = get_yes_no("Was the drug test completed?")
@@ -512,7 +510,7 @@ def citation_info():
         # Collect citation details
         citation_issued_date = st.date_input("Input date citation was issued (YYYY-MM-DD):", key="citation_date")
         citation_issued_time = st.time_input("Input time citation was issued (HH:MM):", key="citation_time")
-        citation_description = text_input_with_default("Describe the offense:", default_value="Not specified")
+        citation_description = text_input_with_default("Describe the offense:")
         
         # Return the collected data
         return {
@@ -616,7 +614,7 @@ def accident_or_incident():
             "Wall", 
             "Unavoidable Road Debris", 
             "Avoidable Road Debris", 
-            "Animal Strike"c
+            "Animal Strike"
         ],
         index=0  # Default selection
     )
@@ -649,18 +647,18 @@ def v1_codriver():
 # V@ PASSENGER INFO FUNCTION # ------------------------------------------------------------------------------------------------
 def get_v2_passengers():
     st.subheader("V2 Passenger Info")
-    has_passengers = get_yes_no("Does V2 have passengers?:", default="no")
+    has_passengers = get_yes_no("Does V2 have passengers?:")
     passengers = []
     if has_passengers:
-        num_passengers = text_input_with_default("How many passengers are there?", default="0")
+        num_passengers = text_input_with_default("How many passengers are there?")
         try:
-            num_passengers = numeric_input_with_default(num_passengers)
+            num_passengers = text_input_with_default(num_passengers)
         except ValueError:
             num_passengers = 0
         for i in range(num_passengers):
             st.text(f"Passenger {i + 1}:")
-            passenger_name = text_input_with_default("Enter passenger name", default_value="N/A")
-            passenger_injury = get_yes_no(f"Is {passenger_name} injured? (y/n)", default_value="no")
+            passenger_name = text_input_with_default("Enter passenger name")
+            passenger_injury = get_yes_no(f"Is {passenger_name} injured?")
             passengers.append({"name": passenger_name, "injured": passenger_injury})
     return {"has_passengers": has_passengers, "passengers": passengers}
 # ------------------------------------------------------------------------------------------------
@@ -676,21 +674,21 @@ def accident_form():
     Displays the accident report form.
     """
     st.header("Accident Information")
-    company_info = text_input_with_default("Company Info:", default_value="N/A")
-    person_reporting = text_input_with_default("Person Reporting:", default_value="N/A")
+    company_info = text_input_with_default("Company Info:")
+    person_reporting = text_input_with_default("Person Reporting:")
     accident_date = st.date_input("Accident Date:")
     accident_time = st.time_input("Accident Time:")
-    accident_location = text_input_with_default("Accident Location or Address:", default_value="Unknown")
-    accident_description = text_input_with_default("Accident Description:", default_value="Not specified")
+    accident_location = text_input_with_default("Accident Location or Address:")
+    accident_description = text_input_with_default("Accident Description:")
 
     weather_info = st.selectbox("Weather Conditions:", ['Clear', 'Overcast', 'Rainy', 'Windy', 'Snowy'])
     road_conditions = st.selectbox("Road Conditions:", ['Dry', 'Wet', 'Icy', 'Snowy'])
 
-    v1_driver = text_input_with_default("V1 Driver Name:", default_value="Unknown")
-    v1_vehicle = text_input_with_default("V1 Vehicle ID or License Plate:", default_value="N/A")
+    v1_driver = text_input_with_default("V1 Driver Name:")
+    v1_vehicle = text_input_with_default("V1 Vehicle ID or License Plate:")
 
-    v2_driver = text_input_with_default("V2 Driver Name:", default_value="Unknown")
-    v2_vehicle = text_input_with_default("V2 Vehicle ID or License Plate:", default_value="N/A")
+    v2_driver = text_input_with_default("V2 Driver Name:")
+    v2_vehicle = text_input_with_default("V2 Vehicle ID or License Plate:")
 
     return {
         "company_info": company_info,
@@ -753,7 +751,7 @@ def vehicle_lookup():
 # CLAIM NUMBER LOOKUP PAGE # ------------------------------------------------------------------------------------------------
 def flt_lookup():
     st.subheader("FLT Number Lookup")
-    flt_number = numeric_input_with_default("Enter FLT Number:")
+    flt_number = text_input_with_default("Enter FLT Number:")
     if st.button("Search by FLT"):
         query = """
         SELECT * FROM accident_reports 
